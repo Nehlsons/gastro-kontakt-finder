@@ -4,7 +4,6 @@ import { useToast } from '@/components/ui/use-toast';
 import Header from '@/components/Header';
 import SearchForm from '@/components/SearchForm';
 import ResultsTable from '@/components/ResultsTable';
-import { CrawlForm } from '@/components/CrawlForm';
 import { Business, SearchParams } from '@/lib/types';
 import { searchBusinesses } from '@/lib/mockData';
 
@@ -50,16 +49,11 @@ const Index = () => {
               Kontakte für Gastronomie und Hotellerie finden
             </h2>
             <p className="mb-6 text-muted-foreground">
-              Geben Sie eine Website-URL ein, um nach Gastronomie- und Hotelleriekontakten zu suchen, 
-              oder nutzen Sie die manuelle Suche unten.
+              Geben Sie einen Ort oder eine Postleitzahl ein und wählen Sie, ob Sie nach Restaurants, 
+              Hotels oder beiden suchen möchten.
             </p>
-
-            <CrawlForm />
             
-            <div className="mt-8 pt-8 border-t">
-              <h3 className="mb-4 text-xl font-semibold">Manuelle Suche</h3>
-              <SearchForm onSearch={handleSearch} isLoading={isLoading} />
-            </div>
+            <SearchForm onSearch={handleSearch} isLoading={isLoading} />
           </div>
           
           {(hasSearched || businesses.length > 0) && (
