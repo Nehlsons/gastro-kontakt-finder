@@ -76,9 +76,53 @@ const generateMockBusinesses = (params: SearchParams): Business[] => {
   ];
 
   // Generate postal code for the given location
-  const postalCode = location.length === 5 && !isNaN(Number(location)) 
-    ? location 
-    : (Math.floor(Math.random() * 89999) + 10000).toString();
+  let postalCode;
+  let city;
+  
+  // Determine if input is a postal code or city name
+  if (location.length === 5 && !isNaN(Number(location))) {
+    // Input is a postal code
+    postalCode = location;
+    
+    // Assign a matching city name based on the postal code
+    const cityOptions = ["Berlin", "München", "Hamburg", "Köln", "Frankfurt", "Dresden", "Leipzig"];
+    city = getRandomElement(cityOptions);
+  } else {
+    // Input is a city name
+    city = location;
+    
+    // Generate postal code prefix based on common German regions
+    let postalCodePrefix;
+    switch(city.toLowerCase()) {
+      case "berlin":
+        postalCodePrefix = "10"; // Berlin postal codes start with 10-14
+        break;
+      case "hamburg":
+        postalCodePrefix = "20"; // Hamburg postal codes start with 20-22
+        break;
+      case "münchen":
+      case "muenchen":
+        postalCodePrefix = "80"; // München postal codes start with 80-81
+        break;
+      case "köln":
+      case "koeln":
+        postalCodePrefix = "50"; // Köln postal codes start with 50-51
+        break;
+      case "frankfurt":
+        postalCodePrefix = "60"; // Frankfurt postal codes start with 60-61
+        break;
+      default:
+        postalCodePrefix = String(Math.floor(Math.random() * 9) + 1); // Random first digit (1-9)
+    }
+    
+    // Generate remaining digits for the postal code
+    const remainingDigits = 5 - postalCodePrefix.length;
+    for (let i = 0; i < remainingDigits; i++) {
+      postalCodePrefix += Math.floor(Math.random() * 10);
+    }
+    
+    postalCode = postalCodePrefix;
+  }
   
   // Generate random businesses
   const results: Business[] = [];
@@ -91,13 +135,14 @@ const generateMockBusinesses = (params: SearchParams): Business[] => {
       ? types[0] 
       : getRandomElement(types);
     
+    // Don't append the location to the name anymore
     const name = type === "restaurant" 
-      ? getRandomElement(restaurants) + " " + location 
-      : getRandomElement(hotels) + " " + location;
+      ? getRandomElement(restaurants)
+      : getRandomElement(hotels);
     
     const streetNumber = Math.floor(Math.random() * 100) + 1;
     const street = getRandomElement(streets);
-    const address = `${street} ${streetNumber}, ${postalCode} ${location}`;
+    const address = `${street} ${streetNumber}, ${postalCode} ${city}`;
     
     const domain = i < domains.length 
       ? domains[i] 
