@@ -75,6 +75,56 @@ const generateMockBusinesses = (params: SearchParams): Business[] => {
     "brauhaus-schmidt.de"
   ];
 
+  // Map of German cities to their postal code ranges
+  const cityPostalCodeMap: Record<string, string[]> = {
+    "Berlin": ["10", "12", "13", "14"],
+    "Hamburg": ["20", "21", "22"],
+    "München": ["80", "81", "82"],
+    "Köln": ["50", "51"],
+    "Frankfurt": ["60", "61"],
+    "Dresden": ["01"],
+    "Leipzig": ["04"],
+    "Rostock": ["18"],
+    "Stuttgart": ["70"],
+    "Düsseldorf": ["40"]
+  };
+  
+  // Function to get city from postal code
+  const getCityFromPostalCode = (postCode: string): string => {
+    const prefix = postCode.substring(0, 2);
+    
+    for (const [city, prefixes] of Object.entries(cityPostalCodeMap)) {
+      if (prefixes.some(p => prefix.startsWith(p))) {
+        return city;
+      }
+    }
+    
+    return "Berlin"; // Default fallback
+  };
+  
+  // Function to get a valid postal code prefix for a city
+  const getPostalCodePrefixForCity = (cityName: string): string => {
+    const normalizedCityName = cityName
+      .toLowerCase()
+      .replace("ü", "ue")
+      .replace("ö", "oe")
+      .replace("ä", "ae");
+      
+    for (const [city, prefixes] of Object.entries(cityPostalCodeMap)) {
+      const normalizedCity = city
+        .toLowerCase()
+        .replace("ü", "ue")
+        .replace("ö", "oe")
+        .replace("ä", "ae");
+        
+      if (normalizedCity === normalizedCityName) {
+        return getRandomElement(prefixes);
+      }
+    }
+    
+    return "10"; // Default to Berlin if no match
+  };
+
   // Generate postal code for the given location
   let postalCode;
   let city;
@@ -85,43 +135,23 @@ const generateMockBusinesses = (params: SearchParams): Business[] => {
     postalCode = location;
     
     // Assign a matching city name based on the postal code
-    const cityOptions = ["Berlin", "München", "Hamburg", "Köln", "Frankfurt", "Dresden", "Leipzig"];
-    city = getRandomElement(cityOptions);
+    city = getCityFromPostalCode(postalCode);
   } else {
     // Input is a city name
     city = location;
     
-    // Generate postal code prefix based on common German regions
-    let postalCodePrefix;
-    switch(city.toLowerCase()) {
-      case "berlin":
-        postalCodePrefix = "10"; // Berlin postal codes start with 10-14
-        break;
-      case "hamburg":
-        postalCodePrefix = "20"; // Hamburg postal codes start with 20-22
-        break;
-      case "münchen":
-      case "muenchen":
-        postalCodePrefix = "80"; // München postal codes start with 80-81
-        break;
-      case "köln":
-      case "koeln":
-        postalCodePrefix = "50"; // Köln postal codes start with 50-51
-        break;
-      case "frankfurt":
-        postalCodePrefix = "60"; // Frankfurt postal codes start with 60-61
-        break;
-      default:
-        postalCodePrefix = String(Math.floor(Math.random() * 9) + 1); // Random first digit (1-9)
-    }
+    // Generate postal code prefix based on city
+    const postalCodePrefix = getPostalCodePrefixForCity(city);
     
     // Generate remaining digits for the postal code
     const remainingDigits = 5 - postalCodePrefix.length;
+    let generatedPostalCode = postalCodePrefix;
+    
     for (let i = 0; i < remainingDigits; i++) {
-      postalCodePrefix += Math.floor(Math.random() * 10);
+      generatedPostalCode += Math.floor(Math.random() * 10);
     }
     
-    postalCode = postalCodePrefix;
+    postalCode = generatedPostalCode;
   }
   
   // Generate random businesses
