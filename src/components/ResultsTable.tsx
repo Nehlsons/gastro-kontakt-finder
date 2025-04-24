@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Table, 
@@ -24,11 +23,14 @@ import {
   MoreHorizontal, 
   Copy, 
   ExternalLink, 
-  Mail
+  Mail,
+  Filter,
+  FilterX
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
 import { exportToExcel } from '@/lib/exportService';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface ResultsTableProps {
   businesses: Business[];
@@ -37,14 +39,20 @@ interface ResultsTableProps {
 
 const ResultsTable: React.FC<ResultsTableProps> = ({ businesses, loading }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [showOnlyWithEmail, setShowOnlyWithEmail] = useState(false);
   
-  // Filter businesses based on search term
-  const filteredBusinesses = businesses.filter(business =>
-    business.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    business.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (business.owner && business.owner.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-  
+  // Filter businesses based on search term and email filter
+  const filteredBusinesses = businesses.filter(business => {
+    const matchesSearch = business.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      business.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (business.owner && business.owner.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+    if (showOnlyWithEmail) {
+      return matchesSearch && business.email;
+    }
+    return matchesSearch;
+  });
+
   // Copy to clipboard function
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -88,7 +96,21 @@ const ResultsTable: React.FC<ResultsTableProps> = ({ businesses, loading }) => {
             {filteredBusinesses.length} {filteredBusinesses.length === 1 ? 'Eintrag' : 'Einträge'} gefunden
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="emailFilter"
+              checked={showOnlyWithEmail}
+              onCheckedChange={(checked) => setShowOnlyWithEmail(checked as boolean)}
+            />
+            <label
+              htmlFor="emailFilter"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
+            >
+              {showOnlyWithEmail ? <FilterX className="h-4 w-4" /> : <Filter className="h-4 w-4" />}
+              Nur mit E-Mail
+            </label>
+          </div>
           <Input
             placeholder="Suchen..."
             value={searchTerm}
